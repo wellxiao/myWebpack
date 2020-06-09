@@ -1,0 +1,268 @@
+{% extends "index.html" %}
+
+<!-- page specific plugin styles -->
+{% block HeadPageSpecificPluginStyles %}
+<!-- 特定页面CSS -->
+<link rel="stylesheet" href="/static/css/jquery-ui-1.10.3.full.min.css" />
+<link rel="stylesheet" href="/static/css/datepicker.css" />
+<link rel="stylesheet" href="/static/css/ui.jqgrid.css" />
+<script src="/static/js/jquery.js"></script>
+<!--link 标签针对css的  script引用javascript-->
+<script src="/static/js/tables/bootstrap.min.js"></script>
+<script src="/static/js/bootstrap-table.js"></script>
+{% endblock %} {% block BodyPageContent %}
+<div class="main-content">
+    <div class="breadcrumbs" id="breadcrumbs">
+        <script type="text/javascript">
+            try {
+                ace.settings.check('breadcrumbs', 'fixed')
+            } catch (e) {}
+        </script>
+        <ul class="breadcrumb">
+            <li>
+                <i class="icon-home home-icon"></i>
+                <a href=" ">Home</a>
+            </li>
+            <li class="active">服务器管理</li>
+        </ul>
+        <!-- .breadcrumb -->
+    </div>
+    <div class="page-content">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="widget-box">
+                    <div class="widget-header widget-header-small header-color-green3">
+                        <h5 class="lighter">搜索框</h5>
+                    </div>
+                    <div class="widget-body">
+                        <div class="widget-main">
+                            <br />
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">服务器名称:</span>
+                                        <input
+                                            type="text"
+                                            id="search_cnname"
+                                            placeholder=" 请输入服务器名称"
+                                            class="form-control search-query "
+                                            onkeydown="doSearch(arguments[0]||event)"
+                                            aria-describedby="basic-addon3"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-3">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">服务器IP:</span>
+                                        <input
+                                            type="text"
+                                            id="search_enname"
+                                            placeholder=" 请输入服务器IP"
+                                            class="form-control search-query "
+                                            onkeydown="doSearch(arguments[0]||event)"
+                                            aria-describedby="basic-addon3"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="input-group">
+                                        <span class="input-group-btn">
+                                            <button
+                                                type="button"
+                                                id="searchButton"
+                                                name="searchButton"
+                                                class="btn btn-purple btn-sm"
+                                                onclick="search();"
+                                            >
+                                                搜索
+                                                <i class="icon-search icon-on-right bigger-110"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-3">
+                                    <div class="input-group">
+                                        <span class="input-group-btn">
+                                            <button type="button" id="createId" name="createId" class="btn btn-purple btn-sm" onclick="gridReload();">
+                                                添加
+                                                <i class="icon-search icon-on-right bigger-110"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <table id="server_table" class="table table-hover" width="1000"></table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xs-12">
+                <!-- PAGE CONTENT BEGINS -->
+                <table id="department-table"></table>
+                <div id="department-pager"></div>
+                <!-- PAGE CONTENT ENDS -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.page-content -->
+</div>
+<!-- /.main-content -->
+
+<script src="/static/js/tables/bootstrap-table.min.js"></script>
+<script>
+    //操作栏的格式化
+    var actionFormatter = function(value, row, index) {
+        var result =
+            '<button onclick=infoClick("+row.id +")>详细信息</button><button onclick=modifyClick(' +
+            row.id +
+            ')>修改</button><button onclick=delClick(' +
+            row.id +
+            ')\>删除</button>'
+        return result
+    }
+
+    var columns = [
+        {
+            field: 'id',
+            title: ' ID',
+            align: 'center',
+            width: 300,
+        },
+        {
+            field: 'server_name',
+            title: ' 服务器名称',
+            align: 'center',
+            width: 300,
+        },
+        {
+            field: 'server_ip',
+            title: '服务器IP',
+            align: 'center',
+            sortable: false, //本列不可以排序
+        },
+        {
+            field: 'server_type',
+            title: '机器类型',
+            align: 'center',
+        },
+        {
+            field: 'server_zonId',
+            title: '机柜',
+            align: 'center',
+        },
+        {
+            field: 'operation',
+            title: '操作',
+            align: 'center',
+            formatter: actionFormatter,
+        },
+    ]
+
+    function resetTable(data) {
+        $('#server_table')
+            .bootstrapTable('destroy')
+            .bootstrapTable({
+                data: data,
+                formatLoadingMessage: function() {
+                    return ''
+                },
+                formatRecordsPerPage: function() {
+                    return ''
+                },
+                formatShowingRows: function() {
+                    return ''
+                },
+                pageNumber: 1, //初始化加载第一页，默认第一页
+                pageSize: 20, //每页的记录行数（*）
+                pageList: [10, 25, 50, 100], //可供选择的每页的行数（*）
+                paginationPreText: '前一页',
+                paginationNextText: '下一页',
+                pagination: true,
+                columns: columns,
+                onLoadSuccess: function(data) {
+                    //加载成功时执行
+                    console.log(data)
+                },
+            })
+    }
+
+    function modifyClick(id) {
+        console.log('修改')
+        console.log(id)
+        // $.ajax({
+        //     url:'/server321',
+        //     type:'get',
+        //     success:function(data){
+        //         console.log(data)
+        //         resetTable()
+        //     },
+        //     error:function(error){
+        //         console.log('11111222222')
+        //     }
+        // })
+    }
+    function delClick(id) {
+        console.log('删除')
+        console.log(id)
+        $.ajax({
+            url: '/del_asset?id=' + id,
+            type: 'get',
+            success: function(data) {
+                console.log(data)
+                refreshTableData(data.data)
+            },
+            error: function(error) {
+                console.log('error')
+            },
+        })
+    }
+
+    function infoClick(id) {
+        console.log('详细信息')
+        console.log(id)
+        // $.ajax({
+        //     url:'/server321',
+        //     type:'get',
+        //     success:function(data){
+        //         console.log(data)
+        //         resetTable()
+        //     },
+        //     error:function(error){
+        //         console.log('11111222222')
+        //     }
+        // })
+    }
+
+    function search() {
+        console.log('66666')
+    }
+
+    function refreshTableData() {
+        $.ajax({
+            url: '/asset_list?asset_type=server',
+            type: 'get',
+            success: function(data) {
+                resetTable(data.data)
+            },
+            error: function(error) {
+                console.log('11111222222')
+            },
+        })
+    }
+    refreshTableData()
+</script>
+
+{% endblock %}
+
+<!-- inline scripts related to this page -->
+{% block BodyInlineScripts %}
+<script src="/static/js/ops/server.js"></script>
+{% endblock %}
