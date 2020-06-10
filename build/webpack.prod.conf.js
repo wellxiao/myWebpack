@@ -1,129 +1,53 @@
-const path = require('path')
-// const utils = require('./utils')
-const webpack = require('webpack')
-const config = require('../config')
 const merge = require('webpack-merge')
 const baseWebpackConfig = require('./webpack.base.conf')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
-const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
+// const HtmlWebpackPlugin = require('html-webpack-plugin')
+// 分割css代码
+// const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
+
+//清除build/dist文件夹文件
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+//将css提取到单独的文件中
+const MiniCssExtract = require('mini-css-extract-plugin')
+//压缩js文件
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+
+const { resolve } = require('./utils')
 
 const webpackConfig = merge(baseWebpackConfig, {
-    // module: {
-    //     rules: utils.styleLoaders({
-    //         sourceMap: config.build.productionSourceMap,
-    //         extract: true,
-    //         usePostCSS: true,
-    //     }),
-    // },
     // 正式环境不生成map文件
-    devtool: '#source-map',
+    devtool: false,
     output: {
-        path: config.build.assetsRoot,
-        filename: utils.assetsPath('js/[name].[chunkhash].js'),
-        chunkFilename: utils.assetsPath('js/[id].[chunkhash].js'),
+        path: resolve('/dist'),
+        filename: 'js/bundle.js',
+        publicPath: '../',
+    },
+    optimization: {
+        // minimizer: [
+        // ],
     },
     plugins: [
-        // http://vuejs.github.io/vue-loader/en/workflow/production.html
-        new webpack.DefinePlugin({
-            'process.env': env,
+        //使用插件清除dist文件夹中的文件
+        new CleanWebpackPlugin({
+            path: resolve('/dist'),
         }),
-        // UglifyJs do not support ES6+, you can also use babel-minify for better treeshaking: https://github.com/babel/minify
-        new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false,
-            },
-            sourceMap: config.build.productionSourceMap,
-            parallel: true,
+        new MiniCssExtract({
+            filename: '[name].css',
+            chunkFilename: '[id].css',
         }),
-        // extract css into its own file
-        new ExtractTextPlugin({
-            filename: utils.assetsPath('css/[name].[contenthash].css'),
-            // set the following option to `true` if you want to extract CSS from
-            // codesplit chunks into this main css file as well.
-            // This will result in *all* of your app's CSS being loaded upfront.
-            allChunks: false,
+        // 不支持es6语法
+        new UglifyJsPlugin({
+            // test: /\.js(\?.*)?$/i,  //测试匹配文件,
+            // include: /\/includes/, //包含哪些文件
+            // excluce: /\/excludes/, //不包含哪些文件
+            //允许过滤哪些块应该被uglified（默认情况下，所有块都是uglified）。
+            //返回true以uglify块，否则返回false。
+            //     // 使用 SourceMaps 将错误信息的位置映射到模块。这会减慢编译的速度。
+            sourceMap: true, // config.build.productionSourceMap || false,
+            cache: false, //是否启用文件缓存，默认缓存在node_modules/.cache/uglifyjs-webpack-plugin.目录
+            parallel: true, //使用多进程并行运行来提高构建速度
         }),
-        // Compress extracted CSS. We are using this plugin so that possible
-        // duplicated CSS from different components can be deduped.
-        new OptimizeCSSPlugin({
-            cssProcessorOptions: config.build.productionSourceMap ? { safe: true, map: { inline: false } } : { safe: true },
-        }),
-        // generate dist index.html with correct asset hash for caching.
-        // you can customize output by editing /index.html
-        // see https://github.com/ampedandwired/html-webpack-plugin
-        new HtmlWebpackPlugin({
-            title: '魔急便',
-            filename: config.build.index,
-            template: 'index.html',
-            inject: true,
-            minify: {
-                removeComments: true,
-                collapseWhitespace: true,
-                removeAttributeQuotes: true,
-                // more options:
-                // https://github.com/kangax/html-minifier#options-quick-reference
-            },
-            // necessary to consistently work with multiple chunks via CommonsChunkPlugin
-            chunksSortMode: 'dependency',
-        }),
-        // keep module.id stable when vender modules does not change
-        new webpack.HashedModuleIdsPlugin(),
-        // enable scope hoisting
-        new webpack.optimize.ModuleConcatenationPlugin(),
-        // split vendor js into its own file
-        new webpack.optimize.CommonsChunkPlugin({
-            name: 'vendor',
-            minChunks(module) {
-                // any required modules inside node_modules are extracted to vendor
-                return module.resource && /\.js$/.test(module.resource) && module.resource.indexOf(path.join(__dirname, '../node_modules')) === 0
-            },
-        }),
-        // extract webpack runtime and module manifest to its own file in order to
-        // prevent vendor hash from being updated whenever app bundle is updated
-        new webpack.optimize.CommonsChunkPlugin({
-            name: 'manifest',
-            minChunks: Infinity,
-        }),
-        // This instance extracts shared chunks from code splitted chunks and bundles them
-        // in a separate chunk, similar to the vendor chunk
-        // see: https://webpack.js.org/plugins/commons-chunk-plugin/#extra-async-commons-chunk
-        new webpack.optimize.CommonsChunkPlugin({
-            name: 'app',
-            async: 'vendor-async',
-            children: true,
-            minChunks: 3,
-        }),
-
-        // copy custom static assets
-        new CopyWebpackPlugin([
-            {
-                from: path.resolve(__dirname, '../static'),
-                to: config.build.assetsSubDirectory,
-                ignore: ['.*'],
-            },
-        ]),
     ],
 })
 
-if (config.build.productionGzip) {
-    const CompressionWebpackPlugin = require('compression-webpack-plugin')
-
-    webpackConfig.plugins.push(
-        new CompressionWebpackPlugin({
-            asset: '[path].gz[query]',
-            algorithm: 'gzip',
-            test: new RegExp(`\\.(${config.build.productionGzipExtensions.join('|')})$`),
-            threshold: 10240,
-            minRatio: 0.8,
-        }),
-    )
-}
-
-if (config.build.bundleAnalyzerReport) {
-    const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
-    webpackConfig.plugins.push(new BundleAnalyzerPlugin())
-}
 
 module.exports = webpackConfig

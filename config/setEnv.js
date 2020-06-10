@@ -14,6 +14,8 @@ switch (ENV) {
         break
 }
 
-module.exports = {
-    NODE_ENV: envR,
-}
+process.env.NODE_ENV = envR
+
+// module.exports = {
+//     NODE_ENV: envR,
+// }
