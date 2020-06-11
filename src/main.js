@@ -1,4 +1,8 @@
 import '@/styles/index.css'
+import axios from 'axios'
+
+
+console.log(axios)
 
 // console.log(jquery)
 console.log($)

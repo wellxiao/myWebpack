@@ -30,7 +30,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         publicPath: '/',
         proxy: config.dev.proxy,
         // 控制台中不输出打包的信息
-        quiet: true, // necessary for FriendlyErrorsPlugin
+        quiet: false, // necessary for FriendlyErrorsPlugin
         watchOptions: {
             poll: config.dev.poll,
         },

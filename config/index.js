@@ -4,7 +4,7 @@ module.exports = {
         // 地址
         host: '0.0.0.0',
         // 自定义的 是否打开浏览器
-        open: false,
+        open: true,
         // 端口号
         port: 8099,
         //在开发单页应用时非常有用，它依赖于HTML5 history API，如果设置为true，所有的跳转将指向index.html

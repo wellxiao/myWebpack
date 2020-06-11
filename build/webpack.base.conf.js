@@ -7,9 +7,12 @@ const { commonLoader, eslintLoader } = require('./loader')
 //将css提取到单独的文件中
 const MiniCssExtract = require('mini-css-extract-plugin')
 //压缩js文件
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+// const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin')
 const { resolve } = require('./utils')
 require('../config/setEnv')
+
+const MyPlugin = require('../myself/myPlugin')
 
 module.exports = {
     mode: process.env.NODE_ENV,
@@ -55,5 +58,11 @@ module.exports = {
             filename: '[name].css',
             chunkFilename: '[id].css',
         }),
+        new FriendlyErrorsWebpackPlugin(),
+        new webpack.DllReferencePlugin({
+            manifest: require(path.join(__dirname, '../static/dll', 'vendor-manifest.json')),
+            name: '[name]_library',
+        }),
+        new MyPlugin(),
     ],
 }

@@ -8,13 +8,21 @@ exports.commonLoader = [
         test: /\.js$/,
         // loader: 'babel-loader',
         exclude: /(node_modules|bower_components)/, // 优化处理加快速度
-        use: {
-            loader: 'babel-loader',
-            options: {
-                // presets: ['@babel/preset-env', 'stage-0'],
-                // plugins: ['@babel/transform-runtime'],
+        use: [
+            {
+                loader: 'babel-loader',
+                options: {
+                    // presets: ['@babel/preset-env', 'stage-0'],
+                    // plugins: ['@babel/transform-runtime'],
+                },
             },
-        },
+            {
+                loader: resolve('./myself/myloader.js'),
+                options: {
+                    name: 'world', // 传递给loader的参数
+                },
+            },
+        ],
     },
     {
         //正则表达式匹配.css为后缀的文件
